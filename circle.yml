@@ -7,6 +7,7 @@ machine:
     IMAGE_NAME: $PRIVATE_REGISTRY/$CIRCLE_PROJECT_REPONAME:b$CIRCLE_BUILD_NUM
 dependencies:
   override:
+    - docker info && docker --version
     - make test-image
 
 test:
