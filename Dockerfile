@@ -1,10 +1,12 @@
 FROM alpine:edge
-
-MAINTAINER Code Climate <hello@codeclimate.com>
+LABEL maintainer="Code Climate <hello@codeclimate.com>"
 
 WORKDIR /usr/src/app
+
+RUN adduser -u 9000 -D app
+
 # Install PHP
-RUN apk --update add \
+RUN apk add --no-cache \
       php7 \
       php7-common \
       php7-ctype \
@@ -21,32 +23,36 @@ RUN apk --update add \
       php7-tokenizer \
       php7-xmlwriter \
       php7-xml && \
-    rm /var/cache/apk/* && \
-    ln -sf /usr/bin/php7 /usr/bin/php
+    ln -sf /usr/bin/php7 /usr/bin/php && \
+    rm -r /var/cache/misc/*
+
+RUN apk add --no-cache curl && \
+    curl -sS https://getcomposer.org/installer | php && \
+    mv composer.phar /usr/local/bin/composer && \
+    apk del --purge curl && \
+    rm -r ~/.composer /var/cache/misc/*
 
 COPY composer.* ./
 
-RUN apk --update add curl && \
-    curl -sS https://getcomposer.org/installer | php && \
-    ./composer.phar install && \
-    mv composer.phar /usr/local/bin/composer && \
-    apk del curl && \
-    rm /var/cache/apk/*
+RUN composer install --no-dev && \
+    chown -R app:app . && \
+    rm -r ~/.composer /tmp/composer*
 
 COPY bin/build-content ./bin/build-content
 
 # Build Content
-RUN apk --update add build-base ca-certificates ruby ruby-dev && \
-    gem install json httparty --no-rdoc --no-ri && \
+RUN apk add --no-cache ruby ruby-json&& \
+    gem install httparty --no-rdoc --no-ri && \
     ./bin/build-content && \
+    chown -R app:app content && \
+    gem uninstall httparty && \
     rm -rf $( gem environment gemdir ) && \
-    apk del build-base ca-certificates ruby ruby-dev && \
-    rm /var/cache/apk/*
+    apk del --purge ruby ruby-json && \
+    rm -r /var/cache/* ~/.gem
 
 COPY . ./
 
-RUN adduser -u 9000 -D app
-RUN chown -R app:app .
+RUN find -not \( -user app -and -group app \) -exec chown -R app:app {} \;
 
 USER app
 

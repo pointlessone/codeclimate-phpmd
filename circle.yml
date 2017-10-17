@@ -7,11 +7,11 @@ machine:
     IMAGE_NAME: $PRIVATE_REGISTRY/$CIRCLE_PROJECT_REPONAME:b$CIRCLE_BUILD_NUM
 dependencies:
   override:
-    - make image
+    - make test-image
 
 test:
   override:
-    - make citest
+    - make test
 
 deployment:
   registry:

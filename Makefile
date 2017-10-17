@@ -5,15 +5,23 @@ IMAGE_NAME ?= codeclimate/codeclimate-phpmd
 image:
 	docker build --tag $(IMAGE_NAME) .
 
+test-image: image
+	docker build --tag $(IMAGE_NAME)-test --file Dockerfile.test .
+
+
 composer-update:
 	docker run \
 	  --rm \
 	  --volume $(PWD)/composer.json:/usr/src/app/composer.json:ro \
+	  --volume $(PWD)/composer.lock:/usr/src/app/composer.lock \
 	  $(IMAGE_NAME) \
-	  sh -c 'cd /usr/src/app && composer update && cat composer.lock' > composer.lock
+	  sh -c 'cd /usr/src/app && composer update'
 
-citest:
-	docker run --rm $(IMAGE_NAME) sh -c "cd /usr/src/app && vendor/bin/phpunit --bootstrap engine.php ./tests"
+citest: test
 
-test: image
-	docker run --rm $(IMAGE_NAME) sh -c "cd /usr/src/app && vendor/bin/phpunit --bootstrap engine.php ./tests"
+test: test-image
+	docker run \
+		--rm \
+		--volume $(PWD)/tests:/usr/src/app/tests \
+		$(IMAGE_NAME)-test \
+		sh -c "vendor/bin/phpunit --bootstrap engine.php ./tests"

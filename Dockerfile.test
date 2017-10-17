@@ -1,0 +1,6 @@
+FROM codeclimate/codeclimate-phpmd
+
+WORKDIR /usr/src/app
+
+RUN composer install --dev && \
+    rm -r ~/.composer
