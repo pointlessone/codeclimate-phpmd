@@ -6,7 +6,10 @@ image:
 	docker build --tag $(IMAGE_NAME) .
 
 test-image: image
-	docker build --tag $(IMAGE_NAME)-test --file Dockerfile.test .
+	docker build \
+		--build-arg BASE_IMAGE=${IMAGE_NAME} \
+		--tag $(IMAGE_NAME)-test \
+		--file Dockerfile.test .
 
 
 composer-update:

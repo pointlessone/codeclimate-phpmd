@@ -1,4 +1,5 @@
-FROM codeclimate/codeclimate-phpmd
+ARG BASE_IMAGE=codeclimate/codeclimate-phpmd
+FROM ${BASE_IMAGE}
 
 WORKDIR /usr/src/app
 
